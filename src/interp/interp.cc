@@ -1170,7 +1170,8 @@ void Thread::SetRef(Index index) {
   assert(index > 0 && index <= values_.size());
   Index slot = values_.size() - index;
   // keep refs_ ordered!
-  auto it = std::find_if(refs_.rbegin(), refs_.rend(), [slot](u32 x) { return x <= slot; });
+  auto it = std::find_if(refs_.rbegin(), refs_.rend(),
+                         [slot](u32 x) { return x <= slot; });
   if (it == refs_.rend() || *it != slot) {
     refs_.insert(it.base(), slot);
   }
