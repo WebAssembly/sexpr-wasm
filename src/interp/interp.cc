@@ -1166,6 +1166,16 @@ void Thread::Push(Ref ref) {
   values_.push_back(Value::Make(ref));
 }
 
+void Thread::SetRef(Index index) {
+  assert(index > 0 && index <= values_.size());
+  Index slot = values_.size() - index;
+  // keep refs_ ordered!
+  auto it = std::find_if(refs_.rbegin(), refs_.rend(), [slot](u32 x) { return x <= slot; });
+  if (it == refs_.rend() || *it != slot) {
+    refs_.insert(it.base(), slot);
+  }
+}
+
 RunResult Thread::StepInternal(Trap::Ptr* out_trap) {
   using O = Opcode;
 
@@ -1238,31 +1248,51 @@ RunResult Thread::StepInternal(Trap::Ptr* out_trap) {
       break;
 
     case O::Select: {
-      // TODO: need to mark whether this is a ref.
       auto cond = Pop<u32>();
+      auto ref = false;
+      // check if either is a ref
+      ref |= !refs_.empty() && refs_.back() == values_.size();
       Value false_ = Pop();
+      ref |= !refs_.empty() && refs_.back() == values_.size();
       Value true_ = Pop();
+      if (ref) {
+        refs_.push_back(values_.size());
+      }
       Push(cond ? true_ : false_);
       break;
     }
 
+    case O::InterpLocalGetRef:
+      refs_.push_back(values_.size());
+      [[fallthrough]];
     case O::LocalGet:
-      // TODO: need to mark whether this is a ref.
       Push(Pick(instr.imm_u32));
       break;
 
+    case O::InterpLocalSetRef:
+      if (Pick(instr.imm_u32).Get<Ref>() == Ref::Null) {
+        SetRef(instr.imm_u32);
+      }
+      [[fallthrough]];
     case O::LocalSet: {
       Pick(instr.imm_u32) = Pick(1);
       Pop();
       break;
     }
 
+    case O::InterpLocalTeeRef:
+      if (Pick(instr.imm_u32).Get<Ref>() == Ref::Null) {
+        SetRef(instr.imm_u32);
+      }
+      [[fallthrough]];
     case O::LocalTee:
       Pick(instr.imm_u32) = Pick(1);
       break;
 
+    case O::InterpGlobalGetRef:
+      refs_.push_back(values_.size());
+      [[fallthrough]];
     case O::GlobalGet: {
-      // TODO: need to mark whether this is a ref.
       Global::Ptr global{store_, inst_->globals()[instr.imm_u32]};
       Push(global->Get());
       break;

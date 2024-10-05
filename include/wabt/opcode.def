@@ -233,6 +233,10 @@ WABT_OPCODE(___,  ___,  ___,  ___,  0,  0,    0xe3, InterpData, "data", "")
 WABT_OPCODE(___,  ___,  ___,  ___,  0,  0,    0xe4, InterpDropKeep, "drop_keep", "")
 WABT_OPCODE(___,  ___,  ___,  ___,  0,  0,    0xe5, InterpCatchDrop, "catch_drop", "")
 WABT_OPCODE(___,  ___,  ___,  ___,  0,  0,    0xe6, InterpAdjustFrameForReturnCall, "adjust_frame_for_return_call", "")
+WABT_OPCODE(___,  ___,  ___,  ___,  0,  0,    0xe7, InterpGlobalGetRef, "global.get.ref", "")
+WABT_OPCODE(___,  ___,  ___,  ___,  0,  0,    0xe9, InterpLocalGetRef, "local.get.ref", "")
+WABT_OPCODE(___,  ___,  ___,  ___,  0,  0,    0xea, InterpLocalSetRef, "local.set.ref", "")
+WABT_OPCODE(___,  ___,  ___,  ___,  0,  0,    0xeb, InterpLocalTeeRef, "local.tee.ref", "")
 
 /* Saturating float-to-int opcodes (--enable-saturating-float-to-int) */
 WABT_OPCODE(I32,  F32,  ___,  ___,  0,  0xfc, 0x00, I32TruncSatF32S, "i32.trunc_sat_f32_s", "")

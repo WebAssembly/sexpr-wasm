@@ -514,6 +514,8 @@ Instr Istream::Read(Offset* offset) const {
 
     case Opcode::GlobalGet:
     case Opcode::LocalGet:
+    case Opcode::InterpLocalGetRef:
+    case Opcode::InterpGlobalGetRef:
     case Opcode::MemorySize:
     case Opcode::TableSize:
     case Opcode::DataDrop:
@@ -529,6 +531,8 @@ Instr Istream::Read(Offset* offset) const {
     case Opcode::GlobalSet:
     case Opcode::LocalSet:
     case Opcode::LocalTee:
+    case Opcode::InterpLocalSetRef:
+    case Opcode::InterpLocalTeeRef:
     case Opcode::MemoryGrow:
     case Opcode::TableGet:
       // Index immediate, 1 operand.

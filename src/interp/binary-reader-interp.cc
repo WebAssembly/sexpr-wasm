@@ -1260,7 +1260,13 @@ Result BinaryReaderInterp::OnV128ConstExpr(v128 value_bits) {
 Result BinaryReaderInterp::OnGlobalGetExpr(Index global_index) {
   CHECK_RESULT(
       validator_.OnGlobalGet(GetLocation(), Var(global_index, GetLocation())));
-  istream_.Emit(Opcode::GlobalGet, global_index);
+
+  Type type = global_types_.at(global_index).type;
+  if (type.IsRef()) {
+    istream_.Emit(Opcode::InterpGlobalGetRef, global_index);
+  } else {
+    istream_.Emit(Opcode::GlobalGet, global_index);
+  }
   return Result::Ok;
 }
 
@@ -1283,7 +1289,13 @@ Result BinaryReaderInterp::OnLocalGetExpr(Index local_index) {
   Index translated_local_index = TranslateLocalIndex(local_index);
   CHECK_RESULT(
       validator_.OnLocalGet(GetLocation(), Var(local_index, GetLocation())));
-  istream_.Emit(Opcode::LocalGet, translated_local_index);
+
+  Type type = func_->GetLocalType(local_index);
+  if (type.IsRef()) {
+    istream_.Emit(Opcode::InterpLocalGetRef, translated_local_index);
+  } else {
+    istream_.Emit(Opcode::LocalGet, translated_local_index);
+  }
   return Result::Ok;
 }
 
@@ -1292,14 +1304,26 @@ Result BinaryReaderInterp::OnLocalSetExpr(Index local_index) {
   Index translated_local_index = TranslateLocalIndex(local_index);
   CHECK_RESULT(
       validator_.OnLocalSet(GetLocation(), Var(local_index, GetLocation())));
-  istream_.Emit(Opcode::LocalSet, translated_local_index);
+
+  Type type = func_->GetLocalType(local_index);
+  if (type.IsRef()) {
+    istream_.Emit(Opcode::InterpLocalSetRef, translated_local_index);
+  } else {
+    istream_.Emit(Opcode::LocalSet, translated_local_index);
+  }
   return Result::Ok;
 }
 
 Result BinaryReaderInterp::OnLocalTeeExpr(Index local_index) {
   CHECK_RESULT(
       validator_.OnLocalTee(GetLocation(), Var(local_index, GetLocation())));
-  istream_.Emit(Opcode::LocalTee, TranslateLocalIndex(local_index));
+
+  Type type = func_->GetLocalType(local_index);
+  if (type.IsRef()) {
+    istream_.Emit(Opcode::InterpLocalTeeRef, TranslateLocalIndex(local_index));
+  } else {
+    istream_.Emit(Opcode::LocalTee, TranslateLocalIndex(local_index));
+  }
   return Result::Ok;
 }
 
