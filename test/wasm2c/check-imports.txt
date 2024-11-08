@@ -63,6 +63,7 @@ extern const u32 wasm2c_test_max_env_0x5F_indirect_function_table;
 extern const u64 wasm2c_test_min_env_0x5F_linear_memory;
 extern const u64 wasm2c_test_max_env_0x5F_linear_memory;
 extern const u8 wasm2c_test_is64_env_0x5F_linear_memory;
+extern const u32 wasm2c_test_pagesize_env_0x5F_linear_memory;
 
 #ifdef __cplusplus
 }
@@ -857,6 +858,7 @@ const u32 wasm2c_test_max_env_0x5F_indirect_function_table = 4294967295;
 const u64 wasm2c_test_min_env_0x5F_linear_memory = 0;
 const u64 wasm2c_test_max_env_0x5F_linear_memory = 65536;
 const u8 wasm2c_test_is64_env_0x5F_linear_memory = 0;
+const u32 wasm2c_test_pagesize_env_0x5F_linear_memory = 65536;
 
 void wasm2c_test_instantiate(w2c_test* instance, struct w2c_env* w2c_env_instance) {
   assert(wasm_rt_is_initialized());

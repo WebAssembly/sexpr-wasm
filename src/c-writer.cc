@@ -2229,18 +2229,17 @@ void CWriter::WriteDataInitializers() {
     Index memory_idx = module_->num_memory_imports;
     for (Index i = memory_idx; i < module_->memories.size(); i++) {
       const Memory* memory = module_->memories[i];
-      uint64_t max;
-      if (memory->page_limits.has_max) {
-        max = memory->page_limits.max;
-      } else {
-        max = memory->page_limits.is_64 ? (static_cast<uint64_t>(1) << 48)
-                                        : 65536;
-      }
+      const uint64_t max =
+          memory->page_limits.has_max
+              ? memory->page_limits.max
+              : WABT_BYTES_TO_MIN_PAGES(
+                    (memory->page_limits.is_64 ? UINT64_MAX : UINT32_MAX),
+                    memory->page_size);
       std::string func = GetMemoryAPIString(*memory, "wasm_rt_allocate_memory");
-      Write(func, "(",
-            ExternalInstancePtr(ModuleFieldType::Memory, memory->name), ", ",
-            memory->page_limits.initial, ", ", max, ", ",
-            memory->page_limits.is_64, ");", Newline());
+      Write(
+          func, "(", ExternalInstancePtr(ModuleFieldType::Memory, memory->name),
+          ", ", memory->page_limits.initial, ", ", max, ", ",
+          memory->page_limits.is_64, ", ", memory->page_size, ");", Newline());
     }
   }
 
@@ -2881,6 +2880,8 @@ void CWriter::WriteImportProperties(CWriterPhase kind) {
       write_import_prop(import, "max", "u64",
                         limits->has_max ? limits->max : default_max);
       write_import_prop(import, "is64", "u8", limits->is_64);
+      write_import_prop(import, "pagesize", "u32",
+                        cast<MemoryImport>(import)->memory.page_size);
     } else if (import->kind() == ExternalKind::Table) {
       const Limits* limits = &(cast<TableImport>(import)->table.elem_limits);
       const uint64_t default_max = std::numeric_limits<uint32_t>::max();

@@ -58,9 +58,12 @@ examples:
 )";
 
 static const std::string supported_features[] = {
-    "multi-memory", "multi-value", "sign-extension", "saturating-float-to-int",
-    "exceptions",   "memory64",    "extended-const", "simd",
-    "threads",      "tail-call"};
+    "multi-memory",     "multi-value",
+    "sign-extension",   "saturating-float-to-int",
+    "exceptions",       "memory64",
+    "extended-const",   "simd",
+    "threads",          "tail-call",
+    "custom-page-sizes"};
 
 static bool IsFeatureSupported(const std::string& feature) {
   return std::find(std::begin(supported_features), std::end(supported_features),

@@ -403,7 +403,8 @@ static void init_spectest_module(w2c_spectest* instance) {
   instance->spectest_global_i64 = 666l;
   instance->spectest_global_f32 = 666.6;
   instance->spectest_global_f64 = 666.6;
-  wasm_rt_allocate_memory(&instance->spectest_memory, 1, 2, false);
+  wasm_rt_allocate_memory(&instance->spectest_memory, 1, 2, false,
+                          WASM_DEFAULT_PAGE_SIZE);
   wasm_rt_allocate_funcref_table(&instance->spectest_table, 10, 20);
   wasm_rt_allocate_funcref_table(&instance->spectest_table64, 10, 20);
 }

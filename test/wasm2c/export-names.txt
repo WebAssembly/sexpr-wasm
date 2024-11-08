@@ -48,6 +48,7 @@ wasm_rt_func_type_t wasm2c_test_get_func_type(uint32_t param_count, uint32_t res
 extern const u64 wasm2c_test_min_0x5Cmodule_import0x200x2A0x2F;
 extern const u64 wasm2c_test_max_0x5Cmodule_import0x200x2A0x2F;
 extern const u8 wasm2c_test_is64_0x5Cmodule_import0x200x2A0x2F;
+extern const u32 wasm2c_test_pagesize_0x5Cmodule_import0x200x2A0x2F;
 
 /* export: '' */
 void w2c_test_(w2c_test*);
@@ -905,6 +906,7 @@ static void init_instance_import(w2c_test* instance, struct w2c_0x5Cmodule* w2c_
 const u64 wasm2c_test_min_0x5Cmodule_import0x200x2A0x2F = 0;
 const u64 wasm2c_test_max_0x5Cmodule_import0x200x2A0x2F = 65536;
 const u8 wasm2c_test_is64_0x5Cmodule_import0x200x2A0x2F = 0;
+const u32 wasm2c_test_pagesize_0x5Cmodule_import0x200x2A0x2F = 65536;
 
 void wasm2c_test_instantiate(w2c_test* instance, struct w2c_0x5Cmodule* w2c_0x5Cmodule_instance) {
   assert(wasm_rt_is_initialized());

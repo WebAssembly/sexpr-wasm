@@ -466,12 +466,12 @@ typedef void* wasm_rt_externref_t;
 typedef struct {
   /** The linear memory data, with a byte length of `size`. */
   uint8_t* data;
+  /** The page size for this Memory object
+      (always 64 KiB without the custom-page-sizes feature) */
+  uint32_t page_size;
   /** The current page count for this Memory object. */
   uint64_t pages;
-  /**
-   * The maximum page count for this Memory object. If there is no maximum,
-   * `max_pages` is 0xffffffffu (i.e. UINT32_MAX).
-   */
+  /** The maximum page count for this Memory object. */
   uint64_t max_pages;
   /** The current size of the linear memory, in bytes. */
   uint64_t size;
@@ -494,12 +494,12 @@ typedef struct {
    * volatile.
    */
   _Atomic volatile uint8_t* data;
+  /** The page size for this Memory object
+      (always 64 KiB without the custom-page-sizes feature) */
+  uint32_t page_size;
   /** The current page count for this Memory object. */
   uint64_t pages;
-  /**
-   * The maximum page count for this Memory object. If there is no maximum,
-   * `max_pages` is 0xffffffffu (i.e. UINT32_MAX).
-   */
+  /* The maximum page count for this Memory object. */
   uint64_t max_pages;
   /** The current size of the linear memory, in bytes. */
   uint64_t size;
@@ -601,6 +601,9 @@ const char* wasm_rt_strerror(wasm_rt_trap_t trap);
 
 #define wasm_rt_try(target) WASM_RT_SETJMP(target)
 
+/** WebAssembly's default page size (64 KiB) */
+#define WASM_DEFAULT_PAGE_SIZE 65536
+
 /**
  * Initialize a Memory object with an initial page size of `initial_pages` and
  * a maximum page size of `max_pages`, indexed with an i32 or i64.
@@ -609,13 +612,14 @@ const char* wasm_rt_strerror(wasm_rt_trap_t trap);
  *    wasm_rt_memory_t my_memory;
  *    // 1 initial page (65536 bytes), and a maximum of 2 pages,
  *    // indexed with an i32
- *    wasm_rt_allocate_memory(&my_memory, 1, 2, false);
+ *    wasm_rt_allocate_memory(&my_memory, 1, 2, false, WASM_DEFAULT_PAGE_SIZE);
  *  ```
  */
 void wasm_rt_allocate_memory(wasm_rt_memory_t*,
                              uint64_t initial_pages,
                              uint64_t max_pages,
-                             bool is64);
+                             bool is64,
+                             uint32_t page_size);
 
 /**
  * Grow a Memory object by `pages`, and return the previous page count. If
@@ -642,7 +646,8 @@ void wasm_rt_free_memory(wasm_rt_memory_t*);
 void wasm_rt_allocate_memory_shared(wasm_rt_shared_memory_t*,
                                     uint64_t initial_pages,
                                     uint64_t max_pages,
-                                    bool is64);
+                                    bool is64,
+                                    uint32_t page_size);
 
 /** Shared memory version of wasm_rt_grow_memory */
 uint64_t wasm_rt_grow_memory_shared(wasm_rt_shared_memory_t*, uint64_t pages);
