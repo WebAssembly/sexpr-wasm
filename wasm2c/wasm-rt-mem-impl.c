@@ -25,8 +25,6 @@
 #include <sys/mman.h>
 #endif
 
-#define WASM_PAGE_SIZE 65536
-
 #ifdef WASM_RT_GROW_FAILED_HANDLER
 extern void WASM_RT_GROW_FAILED_HANDLER();
 #endif
@@ -112,7 +110,7 @@ static void os_print_last_error(const char* msg) {
   }
 }
 
-#else
+#else /* !_WIN32 */
 static void* os_mmap(size_t size) {
   int map_prot = PROT_NONE;
   int map_flags = MAP_ANONYMOUS | MAP_PRIVATE;
@@ -134,17 +132,16 @@ static void os_print_last_error(const char* msg) {
   perror(msg);
 }
 
-#endif
+#endif /* _WIN32 */
 
-static uint64_t get_alloc_size_for_mmap(uint64_t max_pages, bool is64) {
-  assert(!is64 && "memory64 is not yet compatible with WASM_RT_USE_MMAP");
+static uint64_t get_alloc_size_for_mmap_default32(uint64_t max_pages) {
 #if WASM_RT_MEMCHECK_GUARD_PAGES
   /* Reserve 8GiB. */
   const uint64_t max_size = 0x200000000ul;
   return max_size;
 #else
   if (max_pages != 0) {
-    const uint64_t max_size = max_pages * WASM_PAGE_SIZE;
+    const uint64_t max_size = max_pages * WASM_DEFAULT_PAGE_SIZE;
     return max_size;
   }
 
@@ -154,7 +151,7 @@ static uint64_t get_alloc_size_for_mmap(uint64_t max_pages, bool is64) {
 #endif
 }
 
-#endif
+#endif /* WASM_RT_USE_MMAP */
 
 // Include operations for memory
 #define WASM_RT_MEM_OPS
@@ -175,4 +172,3 @@ static uint64_t get_alloc_size_for_mmap(uint64_t max_pages, bool is64) {
 #undef WIN_MEMORY_LOCK_VAR_INIT
 #undef WIN_MEMORY_LOCK_AQUIRE
 #undef WIN_MEMORY_LOCK_RELEASE
-#undef WASM_PAGE_SIZE

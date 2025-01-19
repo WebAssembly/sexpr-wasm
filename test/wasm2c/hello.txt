@@ -845,7 +845,7 @@ static const u8 data_segment_data_w2c_test_d0[] = {
 };
 
 static void init_memories(w2c_test* instance) {
-  wasm_rt_allocate_memory(&instance->w2c_memory, 1, 65536, 0);
+  wasm_rt_allocate_memory(&instance->w2c_memory, 1, 65536, 0, 65536);
   LOAD_DATA(instance->w2c_memory, 8u, data_segment_data_w2c_test_d0, 14);
 }
 

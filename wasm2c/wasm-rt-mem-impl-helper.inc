@@ -63,21 +63,28 @@
 
 #endif
 
+bool MEMORY_API_NAME(wasm_rt_memory_is_default32)(const MEMORY_TYPE* memory) {
+  return memory->page_size == WASM_DEFAULT_PAGE_SIZE && !memory->is64;
+}
+
 void MEMORY_API_NAME(wasm_rt_allocate_memory)(MEMORY_TYPE* memory,
                                               uint64_t initial_pages,
                                               uint64_t max_pages,
-                                              bool is64) {
-  uint64_t byte_length = initial_pages * WASM_PAGE_SIZE;
+                                              bool is64,
+                                              uint32_t page_size) {
+  uint64_t byte_length = initial_pages * page_size;
   memory->size = byte_length;
   memory->pages = initial_pages;
   memory->max_pages = max_pages;
   memory->is64 = is64;
+  memory->page_size = page_size;
   MEMORY_LOCK_VAR_INIT(memory->mem_lock);
 
-  if (WASM_RT_USE_MMAP && !is64) {
+  if (WASM_RT_USE_MMAP &&
+      MEMORY_API_NAME(wasm_rt_memory_is_default32)(memory)) {
 #if WASM_RT_USE_MMAP  // mmap-related functions don't exist unless this is set
     const uint64_t mmap_size =
-        get_alloc_size_for_mmap(memory->max_pages, memory->is64);
+        get_alloc_size_for_mmap_default32(memory->max_pages);
     void* addr = os_mmap(mmap_size);
     if (!addr) {
       os_print_last_error("os_mmap failed.");
@@ -105,11 +112,12 @@ static uint64_t MEMORY_API_NAME(grow_memory_impl)(MEMORY_TYPE* memory,
   if (new_pages < old_pages || new_pages > memory->max_pages) {
     return (uint64_t)-1;
   }
-  uint64_t old_size = old_pages * WASM_PAGE_SIZE;
-  uint64_t new_size = new_pages * WASM_PAGE_SIZE;
-  uint64_t delta_size = delta * WASM_PAGE_SIZE;
+  uint64_t old_size = old_pages * memory->page_size;
+  uint64_t new_size = new_pages * memory->page_size;
+  uint64_t delta_size = delta * memory->page_size;
   MEMORY_CELL_TYPE new_data;
-  if (WASM_RT_USE_MMAP && !memory->is64) {
+  if (WASM_RT_USE_MMAP &&
+      MEMORY_API_NAME(wasm_rt_memory_is_default32)(memory)) {
 #if WASM_RT_USE_MMAP
     new_data = memory->data;
     int ret = os_mprotect((void*)(new_data + old_size), delta_size);
@@ -150,10 +158,11 @@ uint64_t MEMORY_API_NAME(wasm_rt_grow_memory)(MEMORY_TYPE* memory,
 }
 
 void MEMORY_API_NAME(wasm_rt_free_memory)(MEMORY_TYPE* memory) {
-  if (WASM_RT_USE_MMAP && !memory->is64) {
+  if (WASM_RT_USE_MMAP &&
+      MEMORY_API_NAME(wasm_rt_memory_is_default32)(memory)) {
 #if WASM_RT_USE_MMAP
     const uint64_t mmap_size =
-        get_alloc_size_for_mmap(memory->max_pages, memory->is64);
+        get_alloc_size_for_mmap_default32(memory->max_pages);
     os_munmap((void*)memory->data, mmap_size);  // ignore error
 #endif
   } else {
