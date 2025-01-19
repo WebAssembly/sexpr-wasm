@@ -1135,6 +1135,8 @@ class Thread {
   void Push(Value);
   void Push(Ref);
 
+  void SetRef(Index);
+
   template <typename R, typename T>
   using UnopFunc = R WABT_VECTORCALL(T);
   template <typename R, typename T>
