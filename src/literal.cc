@@ -515,11 +515,13 @@ void FloatWriter<T>::WriteHex(char* out, size_t size, Uint bits) {
         exp -= leading_zeroes;
       }
 
-      *p++ = '.';
-      while (sig) {
-        int nybble = (sig >> kTopNybbleShift) & 0xf;
-        *p++ = s_hex_digits[nybble];
-        sig <<= 4;
+      if (sig) {
+        *p++ = '.';
+        while (sig) {
+          int nybble = (sig >> kTopNybbleShift) & 0xf;
+          *p++ = s_hex_digits[nybble];
+          sig <<= 4;
+        }
       }
     }
     *p++ = 'p';
