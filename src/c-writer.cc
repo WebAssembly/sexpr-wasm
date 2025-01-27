@@ -1931,7 +1931,7 @@ void CWriter::WriteTailCallWeakImports() {
     Index num_results = func.GetNumResults();
     if (num_params >= 1) {
       Write(func.decl.sig.param_types, " params;", Newline());
-      Write("wasm_rt_memcpy(params, tail_call_stack, sizeof(params));",
+      Write("wasm_rt_memcpy(&params, tail_call_stack, sizeof(params));",
             Newline());
     }
 

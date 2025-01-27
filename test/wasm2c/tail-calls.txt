@@ -869,7 +869,7 @@ WEAK_FUNC_DECL(wasm_tailcall_w2c_spectest_print_i32_f32, wasm_fallback_test_w2c_
 {
   next->fn = NULL;
   struct wasm_multi_if params;
-  wasm_rt_memcpy(params, tail_call_stack, sizeof(params));
+  wasm_rt_memcpy(&params, tail_call_stack, sizeof(params));
   w2c_spectest_print_i32_f32(*instance_ptr, params.i0, params.f1);
 }
 
