@@ -197,6 +197,7 @@ class BinaryReaderInterp : public BinaryReaderNop {
   Result OnDropExpr() override;
   Result OnElseExpr() override;
   Result OnEndExpr() override;
+  Result OnSkipFunctionBodyExpr(std::vector<uint8_t>& opcode_buffer) override;
   Result OnF32ConstExpr(uint32_t value_bits) override;
   Result OnF64ConstExpr(uint64_t value_bits) override;
   Result OnV128ConstExpr(v128 value_bits) override;
@@ -1084,6 +1085,12 @@ Result BinaryReaderInterp::OnEndExpr() {
     istream_.EmitCatchDrop(1);
   }
   FixupTopLabel();
+  PopLabel();
+  return Result::Ok;
+}
+
+Result BinaryReaderInterp::OnSkipFunctionBodyExpr(
+    std::vector<uint8_t>& opcode_buffer) {
   PopLabel();
   return Result::Ok;
 }

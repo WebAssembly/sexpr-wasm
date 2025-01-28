@@ -32,6 +32,11 @@ Result ReadBinaryIr(const char* filename,
                     Errors*,
                     Module* out_module);
 
-}  // namespace wabt
+class OpcodeRawExpr;
+Result ExtractOpcodeRawExpr(OpcodeRawExpr& expr,
+                            Module& module,
+                            const ReadBinaryOptions& options);
+
+} // namespace wabt
 
 #endif /* WABT_BINARY_READER_IR_H_ */

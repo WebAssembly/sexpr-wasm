@@ -851,6 +851,11 @@ DEFINE_INDEX_DESC(OnDelegateExpr, "depth");
 DEFINE0(OnDropExpr)
 DEFINE0(OnElseExpr)
 DEFINE0(OnEndExpr)
+Result BinaryReaderLogging::OnSkipFunctionBodyExpr(
+    std::vector<uint8_t>& opcode_buffer) {
+  LOGF("OnSkipFunctionBodyExpr length: %lu\n", opcode_buffer.size());
+  return reader_->OnSkipFunctionBodyExpr(opcode_buffer);
+}
 DEFINE_INDEX_DESC(OnGlobalGetExpr, "index")
 DEFINE_INDEX_DESC(OnGlobalSetExpr, "index")
 DEFINE_LOAD_STORE_OPCODE(OnLoadExpr);

@@ -46,6 +46,11 @@ struct WriteBinaryOptions {
 
 Result WriteBinaryModule(Stream*, const Module*, const WriteBinaryOptions&);
 
+class OpcodeRawExpr;
+Result PackOpcodeRawExpr(OpcodeRawExpr& expr,
+                         Module& module,
+                         const WriteBinaryOptions& options);
+
 void WriteType(Stream* stream, Type type, const char* desc = nullptr);
 
 void WriteStr(Stream* stream,

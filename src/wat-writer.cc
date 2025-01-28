@@ -622,6 +622,7 @@ class WatWriter::ExprVisitorDelegate : public ExprVisitor::Delegate {
   Result OnSimdShuffleOpExpr(SimdShuffleOpExpr*) override;
   Result OnLoadSplatExpr(LoadSplatExpr*) override;
   Result OnLoadZeroExpr(LoadZeroExpr*) override;
+  Result OnOpcodeRawExpr(OpcodeRawExpr*) override;
 
  private:
   WatWriter* writer_;
@@ -1154,6 +1155,11 @@ Result WatWriter::ExprVisitorDelegate::OnLoadSplatExpr(LoadSplatExpr* expr) {
 Result WatWriter::ExprVisitorDelegate::OnLoadZeroExpr(LoadZeroExpr* expr) {
   writer_->WriteLoadStoreExpr<LoadZeroExpr>(expr);
   return Result::Ok;
+}
+
+Result WatWriter::ExprVisitorDelegate::OnOpcodeRawExpr(OpcodeRawExpr* expr) {
+  // WatWriter can't run in skip_function_bodies mode
+  return Result::Error;
 }
 
 void WatWriter::WriteExpr(const Expr* expr) {

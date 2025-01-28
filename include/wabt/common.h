@@ -196,7 +196,7 @@ enum class LabelType {
   Try,
   TryTable,
   Catch,
-
+  ExtractFunc,
   First = Func,
   Last = Catch,
 };
