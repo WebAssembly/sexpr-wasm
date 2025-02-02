@@ -492,7 +492,7 @@ class TestInfo(object):
             self.skip = True
         elif key == 'VERBOSE-ARGS':
             self.GetLastCommand().AppendVerboseArgs(value)
-        elif key in ['TODO', 'NOTE']:
+        elif key in ['TODO', 'NOTE', 'UPSTREAM']:
             pass
         elif key == 'TOOL':
             self.SetTool(value)
