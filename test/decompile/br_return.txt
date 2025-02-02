@@ -1,0 +1,12 @@
+;;; TOOL: run-wasm-decompile
+
+(module
+  (func $f (result i32) i32.const 10 br 0)
+)
+
+(;; STDOUT ;;;
+function f_a():int {
+  return 10
+}
+
+;;; STDOUT ;;)
