@@ -20,6 +20,6 @@ section("name") {
 (;; STDOUT ;;;
 (module
   (type (;0;) (func (result i32)))
-  (func $hi_hello_hey (type 0) (result i32)
+  (func (@name "$hi hello hey") (type 0) (result i32)
     i32.const 42))
 ;;; STDOUT ;;)

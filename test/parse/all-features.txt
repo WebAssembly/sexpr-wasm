@@ -11,7 +11,7 @@
   (tag $e)
 
   ;; annotations
-  (func $f (@name "func") (result i32)
+  (func (@name "$f") (result i32)
     (i32.const 0))
 
   (func (result i32)
