@@ -127,11 +127,8 @@ Result Wasm2cMain(Errors& errors) {
   CHECK_RESULT(ReadFile(s_infile.c_str(), &file_data));
 
   Module module;
-  const bool kStopOnFirstError = true;
-  const bool kFailOnCustomSectionError = true;
-  ReadBinaryOptions options(s_write_c_options.features, s_log_stream.get(),
-                            s_read_debug_names, kStopOnFirstError,
-                            kFailOnCustomSectionError);
+  ReadBinaryIrOptions options(s_write_c_options.features, s_log_stream.get());
+  options.read_debug_names = s_read_debug_names;
   CHECK_RESULT(ReadBinaryIr(s_infile.c_str(), file_data.data(),
                             file_data.size(), options, &errors, &module));
   CHECK_RESULT(ValidateModule(&module, &errors, s_write_c_options.features));

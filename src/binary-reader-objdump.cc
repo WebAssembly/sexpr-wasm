@@ -2493,13 +2493,26 @@ Result ReadBinaryObjdump(const uint8_t* data,
                          size_t size,
                          ObjdumpOptions* options,
                          ObjdumpState* state) {
-  Features features;
-  features.EnableAll();
-  const bool kReadDebugNames = true;
-  const bool kStopOnFirstError = false;
-  const bool kFailOnCustomSectionError = false;
-  ReadBinaryOptions read_options(features, options->log_stream, kReadDebugNames,
-                                 kStopOnFirstError, kFailOnCustomSectionError);
+  class ReadBinaryObjdumpOptions : public ReadBinaryOptions {
+    Features features;
+    Stream* log_stream;
+
+   public:
+    explicit ReadBinaryObjdumpOptions(Stream* log_stream)
+        : log_stream(log_stream) {
+      features.EnableAll();
+    }
+    bool skip_function_bodies = false;
+
+    const Features& GetFeatures() const override { return features; }
+    Stream* GetLogStream() const override { return log_stream; }
+    bool ReadDebugNames() const override { return true; }
+    bool StopOnFirstError() const override { return false; }
+    bool FailOnCustomSectionError() const override { return false; }
+    bool SkipFunctionBodies() const override { return skip_function_bodies; }
+  };
+
+  ReadBinaryObjdumpOptions read_options(options->log_stream);
 
   switch (options->mode) {
     case ObjdumpMode::Prepass: {

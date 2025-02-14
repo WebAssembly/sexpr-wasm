@@ -283,11 +283,8 @@ bool CheckIR(const std::string& filename, bool validate) {
     return false;
   }
 
-  const bool kReadDebugNames = true;
-  const bool kStopOnFirstError = true;
-  const bool kFailOnCustomSectionError = true;
-  ReadBinaryOptions options(s_features, s_log_stream.get(), kReadDebugNames,
-                            kStopOnFirstError, kFailOnCustomSectionError);
+  ReadBinaryIrOptions options(s_features, s_log_stream.get());
+  options.read_debug_names = true;
 
   Errors errors;
   wabt::Module module;
@@ -1477,11 +1474,7 @@ interp::Module::Ptr CommandRunner::ReadModule(std::string_view module_filename,
     return {};
   }
 
-  const bool kReadDebugNames = true;
-  const bool kStopOnFirstError = true;
-  const bool kFailOnCustomSectionError = true;
-  ReadBinaryOptions options(s_features, s_log_stream.get(), kReadDebugNames,
-                            kStopOnFirstError, kFailOnCustomSectionError);
+  ReadBinaryInterpOptions options(s_features, s_log_stream.get());
   ModuleDesc module_desc;
   if (Failed(ReadBinaryInterp(module_filename, file_data.data(),
                               file_data.size(), options, errors,
@@ -1531,11 +1524,8 @@ wabt::Result CommandRunner::ReadMalformedBinaryModule(
 
   CHECK_RESULT(ReadFile(module_filename, &file_data));
 
-  const bool kReadDebugNames = true;
-  const bool kStopOnFirstError = true;
-  const bool kFailOnCustomSectionError = true;
-  ReadBinaryOptions options(s_features, s_log_stream.get(), kReadDebugNames,
-                            kStopOnFirstError, kFailOnCustomSectionError);
+  // while we are using a custom delegate, use the same rules as interp.
+  ReadBinaryInterpOptions options(s_features, s_log_stream.get());
 
   class BinaryReaderErrorLogging : public BinaryReaderNop {
     Errors* errors_;

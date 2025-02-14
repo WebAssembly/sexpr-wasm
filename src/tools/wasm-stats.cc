@@ -40,7 +40,7 @@ static const char* s_outfile;
 static size_t s_cutoff = 0;
 static const char* s_separator = ": ";
 
-static ReadBinaryOptions s_read_binary_options;
+static ReadBinaryStatsOptions s_read_binary_options;
 static std::unique_ptr<FileStream> s_log_stream;
 static Features s_features;
 

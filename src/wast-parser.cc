@@ -3519,7 +3519,7 @@ Result WastParser::ParseModuleCommand(Script* script, CommandPtr* out_command) {
       auto command = std::make_unique<ScriptModuleCommand>();
       module = &command->module;
       auto* bsm = cast<BinaryScriptModule>(script_module.get());
-      ReadBinaryOptions options;
+      ReadBinaryIrOptions options;
 #if WABT_TRACING
       auto log_stream = FileStream::CreateStdout();
       options.log_stream = log_stream.get();

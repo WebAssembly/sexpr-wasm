@@ -22,7 +22,7 @@
 #include "wabt/ir.h"
 
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size) {
-  wabt::ReadBinaryOptions options;
+  wabt::ReadBinaryIrOptions options;
   wabt::Errors errors;
   wabt::Module module;
   wabt::ReadBinaryIr("dummy filename", data, size, options, &errors, &module);

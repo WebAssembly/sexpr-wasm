@@ -316,11 +316,7 @@ static Result ReadModule(const char* module_filename,
   CHECK_RESULT(ReadFile(module_filename, &file_data));
 
   ModuleDesc module_desc;
-  const bool kReadDebugNames = true;
-  const bool kStopOnFirstError = true;
-  const bool kFailOnCustomSectionError = true;
-  ReadBinaryOptions options(s_features, s_log_stream.get(), kReadDebugNames,
-                            kStopOnFirstError, kFailOnCustomSectionError);
+  ReadBinaryInterpOptions options(s_features, s_log_stream.get());
   CHECK_RESULT(ReadBinaryInterp(module_filename, file_data.data(),
                                 file_data.size(), options, errors,
                                 &module_desc));
