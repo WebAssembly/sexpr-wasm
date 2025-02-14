@@ -76,9 +76,9 @@ int ProgramMain(int argc, char** argv) {
   if (Succeeded(result)) {
     Errors errors;
     Module module;
-    const bool kStopOnFirstError = true;
-    ReadBinaryOptions options(features, nullptr, true, kStopOnFirstError,
-                              fail_on_custom_section_error);
+    ReadBinaryIrOptions options(features, nullptr);
+    options.read_debug_names = true;
+    options.fail_on_custom_section_error = fail_on_custom_section_error;
     result = ReadBinaryIr(infile.c_str(), file_data.data(), file_data.size(),
                           options, &errors, &module);
     if (Succeeded(result)) {

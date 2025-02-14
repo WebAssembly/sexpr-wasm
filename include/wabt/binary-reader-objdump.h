@@ -20,6 +20,7 @@
 #include <map>
 #include <string>
 
+#include "wabt/binary-reader-options.h"
 #include "wabt/common.h"
 #include "wabt/feature.h"
 #include "wabt/stream.h"
@@ -27,7 +28,6 @@
 namespace wabt {
 
 struct Module;
-struct ReadBinaryOptions;
 
 enum class ObjdumpMode {
   Prepass,

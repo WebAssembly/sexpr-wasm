@@ -1850,7 +1850,7 @@ Result BinaryReaderIR::OnGenericCustomSection(std::string_view name,
 Result ReadBinaryIr(const char* filename,
                     const void* data,
                     size_t size,
-                    const ReadBinaryOptions& options,
+                    const ReadBinaryIrOptions& options,
                     Errors* errors,
                     Module* out_module) {
   BinaryReaderIR reader(out_module, filename, errors);

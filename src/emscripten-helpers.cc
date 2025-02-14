@@ -130,7 +130,7 @@ WabtReadBinaryResult* wabt_read_binary(const void* data,
                                        int read_debug_names,
                                        wabt::Features* features,
                                        wabt::Errors* errors) {
-  wabt::ReadBinaryOptions options;
+  wabt::ReadBinaryIrOptions options;
   options.features = *features;
   options.read_debug_names = read_debug_names;
 

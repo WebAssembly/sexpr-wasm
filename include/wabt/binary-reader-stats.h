@@ -20,14 +20,27 @@
 #include <map>
 #include <vector>
 
+#include "wabt/binary-reader-options.h"
 #include "wabt/common.h"
+#include "wabt/feature.h"
 #include "wabt/opcode.h"
 
 namespace wabt {
 
 struct Module;
-struct ReadBinaryOptions;
 class Stream;
+
+class ReadBinaryStatsOptions : public ReadBinaryOptions {
+ public:
+  ReadBinaryStatsOptions() = default;
+  ReadBinaryStatsOptions(const Features& features, Stream* log_stream)
+      : features(features), log_stream(log_stream) {}
+  Features features;
+  Stream* log_stream = nullptr;
+
+  const Features& GetFeatures() const override { return features; }
+  Stream* GetLogStream() const override { return log_stream; }
+};
 
 class OpcodeInfo {
  public:
@@ -88,7 +101,7 @@ using OpcodeInfoCounts = std::map<OpcodeInfo, size_t>;
 
 Result ReadBinaryOpcnt(const void* data,
                        size_t size,
-                       const ReadBinaryOptions& options,
+                       const ReadBinaryStatsOptions& options,
                        OpcodeInfoCounts* opcode_counts);
 
 }  // namespace wabt

@@ -34,11 +34,18 @@ struct BinaryReaderError : BinaryReaderNop {
   Error first_error;
 };
 
+class ReadBinaryTestOptions : public ReadBinaryOptions {
+ public:
+  Features features;
+  const Features& GetFeatures() const override { return features; }
+  Stream* GetLogStream() const override { return nullptr; }
+};
+
 }  // End of anonymous namespace
 
 TEST(BinaryReader, DisabledOpcodes) {
   // Use the default features.
-  ReadBinaryOptions options;
+  ReadBinaryTestOptions options;
 
   // Loop through all opcodes.
   for (uint32_t i = 0; i < static_cast<uint32_t>(Opcode::Invalid); ++i) {

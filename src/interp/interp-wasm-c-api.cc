@@ -513,16 +513,12 @@ static wasm_message_t FromString(const std::string& s) {
   return result;
 }
 
-static ReadBinaryOptions GetOptions() {
-  const bool kReadDebugNames = true;
-  const bool kStopOnFirstError = true;
-  const bool kFailOnCustomSectionError = true;
+static ReadBinaryInterpOptions GetOptions() {
   s_features.EnableAll();
   if (getenv("WASM_API_DEBUG") != nullptr) {
     s_log_stream = FileStream::CreateStderr();
   }
-  return ReadBinaryOptions(s_features, s_log_stream.get(), kReadDebugNames,
-                           kStopOnFirstError, kFailOnCustomSectionError);
+  return ReadBinaryInterpOptions(s_features, s_log_stream.get());
 }
 
 extern "C" {

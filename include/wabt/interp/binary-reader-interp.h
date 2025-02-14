@@ -17,20 +17,33 @@
 #ifndef WABT_BINARY_READER_INTERP_H_
 #define WABT_BINARY_READER_INTERP_H_
 
+#include "wabt/binary-reader-options.h"
 #include "wabt/common.h"
 #include "wabt/error.h"
+#include "wabt/feature.h"
 #include "wabt/interp/interp.h"
 
 namespace wabt {
 
-struct ReadBinaryOptions;
+class ReadBinaryInterpOptions : public ReadBinaryOptions {
+ public:
+  ReadBinaryInterpOptions() = default;
+  ReadBinaryInterpOptions(const Features& features, Stream* log_stream)
+      : features(features), log_stream(log_stream) {}
+  Features features;
+  Stream* log_stream = nullptr;
+
+  const Features& GetFeatures() const override { return features; }
+  Stream* GetLogStream() const override { return log_stream; }
+  bool ReadDebugNames() const override { return true; }
+};
 
 namespace interp {
 
 Result ReadBinaryInterp(std::string_view filename,
                         const void* data,
                         size_t size,
-                        const ReadBinaryOptions& options,
+                        const ReadBinaryInterpOptions& options,
                         Errors*,
                         ModuleDesc* out_module);
 
