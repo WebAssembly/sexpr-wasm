@@ -133,13 +133,18 @@ int ProgramMain(int argc, char** argv) {
   }
 
   Errors errors;
-  Features features;
-  features.EnableAll();
-  const bool kReadDebugNames = false;
-  const bool kStopOnFirstError = true;
-  const bool kFailOnCustomSectionError = false;
-  ReadBinaryOptions options(features, nullptr, kReadDebugNames,
-                            kStopOnFirstError, kFailOnCustomSectionError);
+  class ReadBinaryStripOptions : public ReadBinaryOptions {
+    Features features;
+
+   public:
+    ReadBinaryStripOptions() { features.EnableAll(); }
+
+    const Features& GetFeatures() const override { return features; }
+    Stream* GetLogStream() const override { return nullptr; }
+    bool ReadDebugNames() const override { return false; }
+    bool FailOnCustomSectionError() const override { return false; }
+  };
+  ReadBinaryStripOptions options;
 
   BinaryReaderStrip reader(v_sections_to_keep, v_sections_to_remove, &errors);
   result = ReadBinary(file_data.data(), file_data.size(), &reader, options);

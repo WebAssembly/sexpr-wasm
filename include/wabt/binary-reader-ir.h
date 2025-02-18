@@ -17,18 +17,37 @@
 #ifndef WABT_BINARY_READER_IR_H_
 #define WABT_BINARY_READER_IR_H_
 
+#include "wabt/binary-reader-options.h"
 #include "wabt/common.h"
 #include "wabt/error.h"
+#include "wabt/feature.h"
 
 namespace wabt {
 
 struct Module;
-struct ReadBinaryOptions;
+
+class ReadBinaryIrOptions : public ReadBinaryOptions {
+ public:
+  ReadBinaryIrOptions() = default;
+  ReadBinaryIrOptions(const Features& features, Stream* log_stream)
+      : features(features), log_stream(log_stream) {}
+  Features features;
+  Stream* log_stream = nullptr;
+  bool read_debug_names = false;
+  bool fail_on_custom_section_error = true;
+
+  const Features& GetFeatures() const override { return features; }
+  Stream* GetLogStream() const override { return log_stream; }
+  bool ReadDebugNames() const override { return read_debug_names; }
+  bool FailOnCustomSectionError() const override {
+    return fail_on_custom_section_error;
+  }
+};
 
 Result ReadBinaryIr(const char* filename,
                     const void* data,
                     size_t size,
-                    const ReadBinaryOptions& options,
+                    const ReadBinaryIrOptions& options,
                     Errors*,
                     Module* out_module);
 

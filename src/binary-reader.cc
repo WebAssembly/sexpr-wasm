@@ -52,11 +52,11 @@
 
 #define ERROR_UNLESS(expr, ...) ERROR_IF(!(expr), __VA_ARGS__)
 
-#define ERROR_UNLESS_OPCODE_ENABLED(opcode)     \
-  do {                                          \
-    if (!opcode.IsEnabled(options_.features)) { \
-      return ReportUnexpectedOpcode(opcode);    \
-    }                                           \
+#define ERROR_UNLESS_OPCODE_ENABLED(opcode)          \
+  do {                                               \
+    if (!opcode.IsEnabled(options_.GetFeatures())) { \
+      return ReportUnexpectedOpcode(opcode);         \
+    }                                                \
   } while (0)
 
 #define CALLBACK0(member) \
@@ -223,8 +223,8 @@ BinaryReader::BinaryReader(const void* data,
                            const ReadBinaryOptions& options)
     : read_end_(size),
       state_(static_cast<const uint8_t*>(data), size),
-      logging_delegate_(options.log_stream, delegate),
-      delegate_(options.log_stream ? &logging_delegate_ : delegate),
+      logging_delegate_(options.GetLogStream(), delegate),
+      delegate_(options.GetLogStream() ? &logging_delegate_ : delegate),
       options_(options),
       last_known_section_(BinarySection::Invalid) {
   delegate->OnSetState(&state_);
@@ -233,7 +233,7 @@ BinaryReader::BinaryReader(const void* data,
 void WABT_PRINTF_FORMAT(2, 3) BinaryReader::PrintError(const char* format,
                                                        ...) {
   ErrorLevel error_level =
-      reading_custom_section_ && !options_.fail_on_custom_section_error
+      reading_custom_section_ && !options_.FailOnCustomSectionError()
           ? ErrorLevel::Warning
           : ErrorLevel::Error;
 
@@ -486,7 +486,7 @@ Result BinaryReader::ReadMemLocation(Address* alignment_log2,
   CHECK_RESULT(CheckAlignment(alignment_log2, desc_align));
   *memidx = 0;
   if (has_memidx) {
-    ERROR_IF(!options_.features.multi_memory_enabled(),
+    ERROR_IF(!options_.GetFeatures().multi_memory_enabled(),
              "multi_memory not allowed");
     CHECK_RESULT(ReadMemidx(memidx, desc_memidx));
   }
@@ -563,17 +563,17 @@ bool BinaryReader::IsConcreteType(Type type) {
       return true;
 
     case Type::V128:
-      return options_.features.simd_enabled();
+      return options_.GetFeatures().simd_enabled();
 
     case Type::FuncRef:
     case Type::ExternRef:
-      return options_.features.reference_types_enabled();
+      return options_.GetFeatures().reference_types_enabled();
 
     case Type::ExnRef:
-      return options_.features.exceptions_enabled();
+      return options_.GetFeatures().exceptions_enabled();
 
     case Type::Reference:
-      return options_.features.function_references_enabled();
+      return options_.GetFeatures().function_references_enabled();
 
     default:
       return false;
@@ -585,7 +585,7 @@ bool BinaryReader::IsBlockType(Type type) {
     return true;
   }
 
-  if (!(options_.features.multi_value_enabled() && type.IsIndex())) {
+  if (!(options_.GetFeatures().multi_value_enabled() && type.IsIndex())) {
     return false;
   }
 
@@ -614,7 +614,7 @@ Result BinaryReader::ReadTable(Type* out_elem_type, Limits* out_elem_limits) {
   bool is_64 = flags & WABT_BINARY_LIMITS_IS_64_FLAG;
   const uint8_t unknown_flags = flags & ~WABT_BINARY_LIMITS_ALL_TABLE_FLAGS;
   ERROR_IF(is_shared, "tables may not be shared");
-  ERROR_IF(is_64 && !options_.features.memory64_enabled(),
+  ERROR_IF(is_64 && !options_.GetFeatures().memory64_enabled(),
            "memory64 not allowed");
   ERROR_UNLESS(unknown_flags == 0, "malformed table limits flag: %d", flags);
   CHECK_RESULT(ReadU32Leb128(&initial, "table initial elem count"));
@@ -642,14 +642,14 @@ Result BinaryReader::ReadMemory(Limits* out_page_limits,
       flags & WABT_BINARY_LIMITS_HAS_CUSTOM_PAGE_SIZE_FLAG;
   const uint8_t unknown_flags = flags & ~WABT_BINARY_LIMITS_ALL_MEMORY_FLAGS;
   ERROR_UNLESS(unknown_flags == 0, "malformed memory limits flag: %d", flags);
-  ERROR_IF(is_shared && !options_.features.threads_enabled(),
+  ERROR_IF(is_shared && !options_.GetFeatures().threads_enabled(),
            "memory may not be shared: threads not allowed");
-  ERROR_IF(is_64 && !options_.features.memory64_enabled(),
+  ERROR_IF(is_64 && !options_.GetFeatures().memory64_enabled(),
            "memory64 not allowed");
-  ERROR_IF(
-      has_custom_page_size && !options_.features.custom_page_sizes_enabled(),
-      "custom page sizes not allowed");
-  if (options_.features.memory64_enabled()) {
+  ERROR_IF(has_custom_page_size &&
+               !options_.GetFeatures().custom_page_sizes_enabled(),
+           "custom page sizes not allowed");
+  if (options_.GetFeatures().memory64_enabled()) {
     CHECK_RESULT(ReadU64Leb128(&initial, "memory initial page count"));
     if (has_max) {
       CHECK_RESULT(ReadU64Leb128(&max, "memory max page count"));
@@ -700,7 +700,7 @@ Result BinaryReader::ReadGlobalHeader(Type* out_type, bool* out_mutable) {
 Result BinaryReader::ReadAddress(Address* out_value,
                                  Index memory,
                                  const char* desc) {
-  if (options_.features.memory64_enabled()) {
+  if (options_.GetFeatures().memory64_enabled()) {
     return ReadU64Leb128(out_value, desc);
   } else {
     uint32_t val;
@@ -947,7 +947,7 @@ Result BinaryReader::ReadInstructions(Offset end_offset, const char* context) {
         Index sig_index;
         CHECK_RESULT(ReadIndex(&sig_index, "call_indirect signature index"));
         Index table_index = 0;
-        if (options_.features.reference_types_enabled()) {
+        if (options_.GetFeatures().reference_types_enabled()) {
           CHECK_RESULT(ReadIndex(&table_index, "call_indirect table index"));
         } else {
           uint8_t reserved;
@@ -971,7 +971,7 @@ Result BinaryReader::ReadInstructions(Offset end_offset, const char* context) {
         Index sig_index;
         CHECK_RESULT(ReadIndex(&sig_index, "return_call_indirect"));
         Index table_index = 0;
-        if (options_.features.reference_types_enabled()) {
+        if (options_.GetFeatures().reference_types_enabled()) {
           CHECK_RESULT(
               ReadIndex(&table_index, "return_call_indirect table index"));
         } else {
@@ -1048,7 +1048,7 @@ Result BinaryReader::ReadInstructions(Offset end_offset, const char* context) {
 
       case Opcode::MemorySize: {
         Index memidx = 0;
-        if (!options_.features.multi_memory_enabled()) {
+        if (!options_.GetFeatures().multi_memory_enabled()) {
           uint8_t reserved;
           CHECK_RESULT(ReadU8(&reserved, "memory.size reserved"));
           ERROR_UNLESS(reserved == 0, "memory.size reserved value must be 0");
@@ -1062,7 +1062,7 @@ Result BinaryReader::ReadInstructions(Offset end_offset, const char* context) {
 
       case Opcode::MemoryGrow: {
         Index memidx = 0;
-        if (!options_.features.multi_memory_enabled()) {
+        if (!options_.GetFeatures().multi_memory_enabled()) {
           uint8_t reserved;
           CHECK_RESULT(ReadU8(&reserved, "memory.grow reserved"));
           ERROR_UNLESS(reserved == 0, "memory.grow reserved value must be 0");
@@ -1794,7 +1794,7 @@ Result BinaryReader::ReadInstructions(Offset end_offset, const char* context) {
                  "memory.init requires data count section");
         CHECK_RESULT(ReadIndex(&segment, "elem segment index"));
         Index memidx = 0;
-        if (!options_.features.multi_memory_enabled()) {
+        if (!options_.GetFeatures().multi_memory_enabled()) {
           uint8_t reserved;
           CHECK_RESULT(ReadU8(&reserved, "reserved memory index"));
           ERROR_UNLESS(reserved == 0, "reserved value must be 0");
@@ -1824,7 +1824,7 @@ Result BinaryReader::ReadInstructions(Offset end_offset, const char* context) {
 
       case Opcode::MemoryFill: {
         Index memidx = 0;
-        if (!options_.features.multi_memory_enabled()) {
+        if (!options_.GetFeatures().multi_memory_enabled()) {
           uint8_t reserved;
           CHECK_RESULT(ReadU8(&reserved, "memory.fill reserved"));
           ERROR_UNLESS(reserved == 0, "memory.fill reserved value must be 0");
@@ -1839,7 +1839,7 @@ Result BinaryReader::ReadInstructions(Offset end_offset, const char* context) {
       case Opcode::MemoryCopy: {
         Index destmemidx = 0;
         Index srcmemidx = 0;
-        if (!options_.features.multi_memory_enabled()) {
+        if (!options_.GetFeatures().multi_memory_enabled()) {
           uint8_t reserved;
           CHECK_RESULT(ReadU8(&reserved, "reserved memory index"));
           ERROR_UNLESS(reserved == 0, "reserved value must be 0");
@@ -2496,7 +2496,7 @@ Result BinaryReader::ReadCustomSection(Index section_index,
     CHECK_RESULT(ReadGenericCustomSection(section_name, section_size));
   }
 
-  if (options_.read_debug_names && section_name == WABT_BINARY_SECTION_NAME) {
+  if (options_.ReadDebugNames() && section_name == WABT_BINARY_SECTION_NAME) {
     CHECK_RESULT(ReadNameSection(section_size));
     did_read_names_section_ = true;
   } else if (section_name == WABT_BINARY_SECTION_DYLINK0) {
@@ -2510,7 +2510,7 @@ Result BinaryReader::ReadCustomSection(Index section_index,
     CHECK_RESULT(ReadTargetFeaturesSections(section_size));
   } else if (section_name == WABT_BINARY_SECTION_LINKING) {
     CHECK_RESULT(ReadLinkingSection(section_size));
-  } else if (options_.features.code_metadata_enabled() &&
+  } else if (options_.GetFeatures().code_metadata_enabled() &&
              section_name.find(WABT_BINARY_SECTION_CODE_METADATA) == 0) {
     std::string_view metadata_name = section_name;
     metadata_name.remove_prefix(sizeof(WABT_BINARY_SECTION_CODE_METADATA) - 1);
@@ -2531,7 +2531,7 @@ Result BinaryReader::ReadTypeSection(Offset section_size) {
 
   for (Index i = 0; i < num_signatures; ++i) {
     Type form;
-    if (options_.features.gc_enabled()) {
+    if (options_.GetFeatures().gc_enabled()) {
       CHECK_RESULT(ReadType(&form, "type form"));
     } else {
       uint8_t type;
@@ -2579,7 +2579,7 @@ Result BinaryReader::ReadTypeSection(Offset section_size) {
       }
 
       case Type::Struct: {
-        ERROR_UNLESS(options_.features.gc_enabled(),
+        ERROR_UNLESS(options_.GetFeatures().gc_enabled(),
                      "invalid type form: struct not allowed");
         Index num_fields;
         CHECK_RESULT(ReadCount(&num_fields, "field count"));
@@ -2594,7 +2594,7 @@ Result BinaryReader::ReadTypeSection(Offset section_size) {
       }
 
       case Type::Array: {
-        ERROR_UNLESS(options_.features.gc_enabled(),
+        ERROR_UNLESS(options_.GetFeatures().gc_enabled(),
                      "invalid type form: array not allowed");
 
         TypeMut field;
@@ -2669,7 +2669,7 @@ Result BinaryReader::ReadImportSection(Offset section_size) {
       }
 
       case ExternalKind::Tag: {
-        ERROR_UNLESS(options_.features.exceptions_enabled(),
+        ERROR_UNLESS(options_.GetFeatures().exceptions_enabled(),
                      "invalid import tag kind: exceptions not allowed");
         Index sig_index;
         CHECK_RESULT(ReadTagType(&sig_index));
@@ -2771,7 +2771,7 @@ Result BinaryReader::ReadExportSection(Offset section_size) {
     Index item_index;
     CHECK_RESULT(ReadIndex(&item_index, "export item index"));
     if (kind == ExternalKind::Tag) {
-      ERROR_UNLESS(options_.features.exceptions_enabled(),
+      ERROR_UNLESS(options_.GetFeatures().exceptions_enabled(),
                    "invalid export tag kind: exceptions not allowed");
     }
 
@@ -2886,7 +2886,7 @@ Result BinaryReader::ReadCodeSection(Offset section_size) {
     }
     CALLBACK(EndLocalDecls);
 
-    if (options_.skip_function_bodies) {
+    if (options_.SkipFunctionBodies()) {
       state_.offset = end_offset;
     } else {
       CHECK_RESULT(ReadFunctionBody(end_offset));
@@ -2909,7 +2909,7 @@ Result BinaryReader::ReadDataSection(Offset section_size) {
   for (Index i = 0; i < num_data_segments_; ++i) {
     uint32_t flags;
     CHECK_RESULT(ReadU32Leb128(&flags, "data segment flags"));
-    ERROR_IF(flags != 0 && !options_.features.bulk_memory_enabled(),
+    ERROR_IF(flags != 0 && !options_.GetFeatures().bulk_memory_enabled(),
              "invalid memory index %d: bulk memory not allowed", flags);
     ERROR_IF(flags > SegFlagMax, "invalid data segment flags: %#x", flags);
     Index memory_index(0);
@@ -2994,12 +2994,12 @@ Result BinaryReader::ReadSections(const ReadSectionsOptions& options) {
 
     CALLBACK(BeginSection, section_index, section, section_size);
 
-    bool stop_on_first_error = options_.stop_on_first_error;
+    bool stop_on_first_error = options_.StopOnFirstError();
     Result section_result = Result::Error;
     switch (section) {
       case BinarySection::Custom:
         section_result = ReadCustomSection(section_index, section_size);
-        if (options_.fail_on_custom_section_error) {
+        if (options_.FailOnCustomSectionError()) {
           result |= section_result;
         } else {
           stop_on_first_error = false;
@@ -3050,14 +3050,14 @@ Result BinaryReader::ReadSections(const ReadSectionsOptions& options) {
         result |= section_result;
         break;
       case BinarySection::Tag:
-        ERROR_UNLESS(options_.features.exceptions_enabled(),
+        ERROR_UNLESS(options_.GetFeatures().exceptions_enabled(),
                      "invalid section code: %u",
                      static_cast<unsigned int>(section));
         section_result = ReadTagSection(section_size);
         result |= section_result;
         break;
       case BinarySection::DataCount:
-        ERROR_UNLESS(options_.features.bulk_memory_enabled(),
+        ERROR_UNLESS(options_.GetFeatures().bulk_memory_enabled(),
                      "invalid section code: %u",
                      static_cast<unsigned int>(section));
         section_result = ReadDataCountSection(section_size);
@@ -3139,7 +3139,7 @@ Result ReadBinary(const void* data,
                   const ReadBinaryOptions& options) {
   BinaryReader reader(data, size, delegate, options);
   return reader.ReadModule(
-      BinaryReader::ReadModuleOptions{options.stop_on_first_error});
+      BinaryReader::ReadModuleOptions{options.StopOnFirstError()});
 }
 
 }  // namespace wabt

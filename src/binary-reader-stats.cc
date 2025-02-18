@@ -305,7 +305,7 @@ Result BinaryReaderOpcnt::OnEndExpr() {
 
 Result ReadBinaryOpcnt(const void* data,
                        size_t size,
-                       const ReadBinaryOptions& options,
+                       const ReadBinaryStatsOptions& options,
                        OpcodeInfoCounts* counts) {
   BinaryReaderOpcnt reader(counts);
   return ReadBinary(data, size, &reader, options);

@@ -1713,7 +1713,7 @@ Result BinaryReaderInterp::OnDelegateExpr(Index depth) {
 Result ReadBinaryInterp(std::string_view filename,
                         const void* data,
                         size_t size,
-                        const ReadBinaryOptions& options,
+                        const ReadBinaryInterpOptions& options,
                         Errors* errors,
                         ModuleDesc* out_module) {
   BinaryReaderInterp reader(out_module, filename, errors, options.features);
