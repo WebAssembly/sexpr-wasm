@@ -36,6 +36,22 @@
     drop
     f32.const -0x1.ff01p1
     drop
+    f32.const +0x0.00000100000000001p-126
+    drop
+    f32.const -0x0.00000100000000001p-126
+    drop
+    f32.const +0x0.000001fffffffffffp-126
+    drop
+    f32.const -0x0.000001fffffffffffp-126
+    drop
+    f32.const +0x0.00000500000000000p-126
+    drop
+    f32.const -0x0.00000500000000000p-126
+    drop
+    f32.const +0x0.00000500000000001p-126
+    drop
+    f32.const -0x0.00000500000000001p-126
+    drop
   )
 )
 (;; STDERR ;;;
@@ -114,9 +130,35 @@
 0000077: 43                                        ; f32.const
 0000078: 8080 7fc0                                 ; f32 literal
 000007c: 1a                                        ; drop
-000007d: 0b                                        ; end
-0000015: 68                                        ; FIXUP func body size
-0000013: 6a                                        ; FIXUP section size
+000007d: 43                                        ; f32.const
+000007e: 0100 0000                                 ; f32 literal
+0000082: 1a                                        ; drop
+0000083: 43                                        ; f32.const
+0000084: 0100 0080                                 ; f32 literal
+0000088: 1a                                        ; drop
+0000089: 43                                        ; f32.const
+000008a: 0100 0000                                 ; f32 literal
+000008e: 1a                                        ; drop
+000008f: 43                                        ; f32.const
+0000090: 0100 0080                                 ; f32 literal
+0000094: 1a                                        ; drop
+0000095: 43                                        ; f32.const
+0000096: 0200 0000                                 ; f32 literal
+000009a: 1a                                        ; drop
+000009b: 43                                        ; f32.const
+000009c: 0200 0080                                 ; f32 literal
+00000a0: 1a                                        ; drop
+00000a1: 43                                        ; f32.const
+00000a2: 0300 0000                                 ; f32 literal
+00000a6: 1a                                        ; drop
+00000a7: 43                                        ; f32.const
+00000a8: 0300 0080                                 ; f32 literal
+00000ac: 1a                                        ; drop
+00000ad: 0b                                        ; end
+; move data: [16, ae) -> [17, af)
+0000015: 9801                                      ; FIXUP func body size
+; move data: [14, af) -> [15, b0)
+0000013: 9b01                                      ; FIXUP section size
 ;;; STDERR ;;)
 (;; STDOUT ;;;
 
@@ -124,40 +166,56 @@ hexfloat_f32.wasm:	file format wasm 0x1
 
 Code Disassembly:
 
-000016 func[0]:
- 000017: 43 00 00 00 00             | f32.const 0x0p+0
- 00001c: 1a                         | drop
- 00001d: 43 80 a2 91 48             | f32.const 0x1.2345p+18
- 000022: 1a                         | drop
- 000023: 43 00 00 80 59             | f32.const 0x1p+52
- 000028: 1a                         | drop
- 000029: 43 00 00 00 7f             | f32.const 0x1p+127
- 00002e: 1a                         | drop
- 00002f: 43 00 00 80 7c             | f32.const 0x1p+122
- 000034: 1a                         | drop
- 000035: 43 00 80 91 7d             | f32.const 0x1.23p+124
- 00003a: 1a                         | drop
- 00003b: 43 f0 ff ff 7e             | f32.const 0x1.ffffep+126
- 000040: 1a                         | drop
- 000041: 43 fe ff 7f 7e             | f32.const 0x1.fffffcp+125
- 000046: 1a                         | drop
- 000047: 43 00 00 00 7f             | f32.const 0x1p+127
- 00004c: 1a                         | drop
- 00004d: 43 c4 ff 7f 7f             | f32.const 0x1.ffff88p+127
- 000052: 1a                         | drop
- 000053: 43 f8 ff 7f 7f             | f32.const 0x1.fffffp+127
- 000058: 1a                         | drop
- 000059: 43 fa ff ff 0a             | f32.const 0x1.fffff4p-106
- 00005e: 1a                         | drop
- 00005f: 43 f8 ff ff 0a             | f32.const 0x1.fffffp-106
- 000064: 1a                         | drop
- 000065: 43 00 00 00 04             | f32.const 0x1p-119
- 00006a: 1a                         | drop
- 00006b: 43 00 00 88 3f             | f32.const 0x1.1p+0
- 000070: 1a                         | drop
- 000071: 43 00 00 80 53             | f32.const 0x1p+40
- 000076: 1a                         | drop
- 000077: 43 80 80 7f c0             | f32.const -0x1.ff01p+1
- 00007c: 1a                         | drop
- 00007d: 0b                         | end
+000018 func[0]:
+ 000019: 43 00 00 00 00             | f32.const 0x0p+0
+ 00001e: 1a                         | drop
+ 00001f: 43 80 a2 91 48             | f32.const 0x1.2345p+18
+ 000024: 1a                         | drop
+ 000025: 43 00 00 80 59             | f32.const 0x1p+52
+ 00002a: 1a                         | drop
+ 00002b: 43 00 00 00 7f             | f32.const 0x1p+127
+ 000030: 1a                         | drop
+ 000031: 43 00 00 80 7c             | f32.const 0x1p+122
+ 000036: 1a                         | drop
+ 000037: 43 00 80 91 7d             | f32.const 0x1.23p+124
+ 00003c: 1a                         | drop
+ 00003d: 43 f0 ff ff 7e             | f32.const 0x1.ffffep+126
+ 000042: 1a                         | drop
+ 000043: 43 fe ff 7f 7e             | f32.const 0x1.fffffcp+125
+ 000048: 1a                         | drop
+ 000049: 43 00 00 00 7f             | f32.const 0x1p+127
+ 00004e: 1a                         | drop
+ 00004f: 43 c4 ff 7f 7f             | f32.const 0x1.ffff88p+127
+ 000054: 1a                         | drop
+ 000055: 43 f8 ff 7f 7f             | f32.const 0x1.fffffp+127
+ 00005a: 1a                         | drop
+ 00005b: 43 fa ff ff 0a             | f32.const 0x1.fffff4p-106
+ 000060: 1a                         | drop
+ 000061: 43 f8 ff ff 0a             | f32.const 0x1.fffffp-106
+ 000066: 1a                         | drop
+ 000067: 43 00 00 00 04             | f32.const 0x1p-119
+ 00006c: 1a                         | drop
+ 00006d: 43 00 00 88 3f             | f32.const 0x1.1p+0
+ 000072: 1a                         | drop
+ 000073: 43 00 00 80 53             | f32.const 0x1p+40
+ 000078: 1a                         | drop
+ 000079: 43 80 80 7f c0             | f32.const -0x1.ff01p+1
+ 00007e: 1a                         | drop
+ 00007f: 43 01 00 00 00             | f32.const 0x1p-149
+ 000084: 1a                         | drop
+ 000085: 43 01 00 00 80             | f32.const -0x1p-149
+ 00008a: 1a                         | drop
+ 00008b: 43 01 00 00 00             | f32.const 0x1p-149
+ 000090: 1a                         | drop
+ 000091: 43 01 00 00 80             | f32.const -0x1p-149
+ 000096: 1a                         | drop
+ 000097: 43 02 00 00 00             | f32.const 0x1p-148
+ 00009c: 1a                         | drop
+ 00009d: 43 02 00 00 80             | f32.const -0x1p-148
+ 0000a2: 1a                         | drop
+ 0000a3: 43 03 00 00 00             | f32.const 0x1.8p-148
+ 0000a8: 1a                         | drop
+ 0000a9: 43 03 00 00 80             | f32.const -0x1.8p-148
+ 0000ae: 1a                         | drop
+ 0000af: 0b                         | end
 ;;; STDOUT ;;)
