@@ -1,11 +1,9 @@
+#define SIMD_FORCE_READ(var) (void)*(volatile v128*)&var;
+
 #define DEFINE_SIMD_LOAD_FUNC(name, func, t)                             \
   static inline v128 name##_unchecked(wasm_rt_memory_t* mem, u64 addr) { \
-    char tmp[sizeof(t)];                                                 \
-    const volatile char* v_addr;                                         \
-    v_addr = (const volatile char*)MEM_ADDR(mem, addr, sizeof(t));       \
-    for (int i = 0; i < sizeof(t); i++)                                  \
-      tmp[i] = v_addr[i];                                                \
-    v128 result = func(&tmp);                                            \
+    v128 result = func(MEM_ADDR(mem, addr, sizeof(t)));                  \
+    SIMD_FORCE_READ(result);                                             \
     return result;                                                       \
   }                                                                      \
   DEF_MEM_CHECKS0(name, _, t, return, v128);
@@ -13,12 +11,8 @@
 #define DEFINE_SIMD_LOAD_LANE(name, func, t, lane)                     \
   static inline v128 name##_unchecked(wasm_rt_memory_t* mem, u64 addr, \
                                       v128 vec) {                      \
-    char tmp[sizeof(t)];                                               \
-    const volatile char* v_addr;                                       \
-    v_addr = (const volatile char*)MEM_ADDR(mem, addr, sizeof(t));     \
-    for (int i = 0; i < sizeof(t); i++)                                \
-      tmp[i] = v_addr[i];                                              \
-    v128 result = func(&tmp, vec, lane);                               \
+    v128 result = func(MEM_ADDR(mem, addr, sizeof(t)), vec, lane);     \
+    SIMD_FORCE_READ(result);                                           \
     return result;                                                     \
   }                                                                    \
   DEF_MEM_CHECKS1(name, _, t, return, v128, v128);
