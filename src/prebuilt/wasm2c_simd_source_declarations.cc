@@ -1,27 +1,18 @@
-const char* s_simd_source_declarations = R"w2c_template(#if defined(__GNUC__) && defined(__x86_64__)
-)w2c_template"
-R"w2c_template(#define SIMD_FORCE_READ(var) __asm__("" ::"x"(var));
-)w2c_template"
-R"w2c_template(#elif defined(__GNUC__) && defined(__aarch64__)
-)w2c_template"
-R"w2c_template(#define SIMD_FORCE_READ(var) __asm__("" ::"w"(var));
-)w2c_template"
-R"w2c_template(#else
-)w2c_template"
-R"w2c_template(#define SIMD_FORCE_READ(var)
-)w2c_template"
-R"w2c_template(#endif
-)w2c_template"
-R"w2c_template(// TODO: equivalent constraint for ARM and other architectures
-)w2c_template"
-R"w2c_template(
-#define DEFINE_SIMD_LOAD_FUNC(name, func, t)                             \
+const char* s_simd_source_declarations = R"w2c_template(#define DEFINE_SIMD_LOAD_FUNC(name, func, t)                             \
 )w2c_template"
 R"w2c_template(  static inline v128 name##_unchecked(wasm_rt_memory_t* mem, u64 addr) { \
 )w2c_template"
-R"w2c_template(    v128 result = func(MEM_ADDR(mem, addr, sizeof(t)));                  \
+R"w2c_template(    char tmp[sizeof(t)];                                                 \
 )w2c_template"
-R"w2c_template(    SIMD_FORCE_READ(result);                                             \
+R"w2c_template(    const volatile char* v_addr;                                         \
+)w2c_template"
+R"w2c_template(    v_addr = (const volatile char*)MEM_ADDR(mem, addr, sizeof(t));       \
+)w2c_template"
+R"w2c_template(    for (int i = 0; i < sizeof(t); i++)                                  \
+)w2c_template"
+R"w2c_template(      tmp[i] = v_addr[i];                                                \
+)w2c_template"
+R"w2c_template(    v128 result = func(&tmp);                                            \
 )w2c_template"
 R"w2c_template(    return result;                                                       \
 )w2c_template"
@@ -36,9 +27,17 @@ R"w2c_template(  static inline v128 name##_unchecked(wasm_rt_memory_t* mem, u64 
 )w2c_template"
 R"w2c_template(                                      v128 vec) {                      \
 )w2c_template"
-R"w2c_template(    v128 result = func(MEM_ADDR(mem, addr, sizeof(t)), vec, lane);     \
+R"w2c_template(    char tmp[sizeof(t)];                                               \
 )w2c_template"
-R"w2c_template(    SIMD_FORCE_READ(result);                                           \
+R"w2c_template(    const volatile char* v_addr;                                       \
+)w2c_template"
+R"w2c_template(    v_addr = (const volatile char*)MEM_ADDR(mem, addr, sizeof(t));     \
+)w2c_template"
+R"w2c_template(    for (int i = 0; i < sizeof(t); i++)                                \
+)w2c_template"
+R"w2c_template(      tmp[i] = v_addr[i];                                              \
+)w2c_template"
+R"w2c_template(    v128 result = func(&tmp, vec, lane);                               \
 )w2c_template"
 R"w2c_template(    return result;                                                     \
 )w2c_template"

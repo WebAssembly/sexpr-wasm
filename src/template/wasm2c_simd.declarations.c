@@ -1,16 +1,11 @@
-#if defined(__GNUC__) && defined(__x86_64__)
-#define SIMD_FORCE_READ(var) __asm__("" ::"x"(var));
-#elif defined(__GNUC__) && defined(__aarch64__)
-#define SIMD_FORCE_READ(var) __asm__("" ::"w"(var));
-#else
-#define SIMD_FORCE_READ(var)
-#endif
-// TODO: equivalent constraint for ARM and other architectures
-
 #define DEFINE_SIMD_LOAD_FUNC(name, func, t)                             \
   static inline v128 name##_unchecked(wasm_rt_memory_t* mem, u64 addr) { \
-    v128 result = func(MEM_ADDR(mem, addr, sizeof(t)));                  \
-    SIMD_FORCE_READ(result);                                             \
+    char tmp[sizeof(t)];                                                 \
+    const volatile char* v_addr;                                         \
+    v_addr = (const volatile char*)MEM_ADDR(mem, addr, sizeof(t));       \
+    for (int i = 0; i < sizeof(t); i++)                                  \
+      tmp[i] = v_addr[i];                                                \
+    v128 result = func(&tmp);                                            \
     return result;                                                       \
   }                                                                      \
   DEF_MEM_CHECKS0(name, _, t, return, v128);
@@ -18,8 +13,12 @@
 #define DEFINE_SIMD_LOAD_LANE(name, func, t, lane)                     \
   static inline v128 name##_unchecked(wasm_rt_memory_t* mem, u64 addr, \
                                       v128 vec) {                      \
-    v128 result = func(MEM_ADDR(mem, addr, sizeof(t)), vec, lane);     \
-    SIMD_FORCE_READ(result);                                           \
+    char tmp[sizeof(t)];                                               \
+    const volatile char* v_addr;                                       \
+    v_addr = (const volatile char*)MEM_ADDR(mem, addr, sizeof(t));     \
+    for (int i = 0; i < sizeof(t); i++)                                \
+      tmp[i] = v_addr[i];                                              \
+    v128 result = func(&tmp, vec, lane);                               \
     return result;                                                     \
   }                                                                    \
   DEF_MEM_CHECKS1(name, _, t, return, v128, v128);
