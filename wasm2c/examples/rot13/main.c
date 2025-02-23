@@ -42,7 +42,7 @@ int main(int argc, char** argv) {
   /* Create a structure to store the memory and current string, allocating 1
      page of Wasm memory (64 KiB) that the rot13 module instance will import. */
   struct w2c_host host;
-  wasm_rt_allocate_memory(&host.memory, 1, 1, false);
+  wasm_rt_allocate_memory(&host.memory, 1, 1, false, WASM_DEFAULT_PAGE_SIZE);
 
   // Construct an instance of the `rot13` module, which imports from the host.
   w2c_rot13 rot13;

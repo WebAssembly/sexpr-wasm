@@ -297,13 +297,16 @@ typedef struct {
 
 Next is the definition of a memory instance. The `data` field is a pointer to
 `size` bytes of linear memory. The `size` field of `wasm_rt_memory_t` is the
-current size of the memory instance in bytes, whereas `pages` is the current
-size in pages (65536 bytes.) `max_pages` is the maximum number of pages as
-specified by the module, or `0xffffffff` if there is no limit.
+current size of the memory instance in bytes, `pages` is the current
+size in pages, and `page_size` contains the page size in bytes (65,536 by default).
+`max_pages` is the maximum number of pages specified by the module or allowed
+by the memory index type (`is64` is true for memories that can grow to 2^64 bytes;
+`false` for memories limited to 2^32 bytes).
 
 ```c
 typedef struct {
   uint8_t* data;
+  uint32_t page_size;
   uint64_t pages, max_pages;
   uint64_t size;
   bool is64;
@@ -353,10 +356,10 @@ bool wasm_rt_is_initialized(void);
 void wasm_rt_free(void);
 void wasm_rt_trap(wasm_rt_trap_t) __attribute__((noreturn));
 const char* wasm_rt_strerror(wasm_rt_trap_t trap);
-void wasm_rt_allocate_memory(wasm_rt_memory_t*, uint32_t initial_pages, uint32_t max_pages, bool is64);
+void wasm_rt_allocate_memory(wasm_rt_memory_t*, uint32_t initial_pages, uint32_t max_pages, bool is64, uint32_t page_size);
 uint32_t wasm_rt_grow_memory(wasm_rt_memory_t*, uint32_t pages);
 void wasm_rt_free_memory(wasm_rt_memory_t*);
-void wasm_rt_allocate_memory_shared(wasm_rt_shared_memory_t*, uint32_t initial_pages, uint32_t max_pages, bool is64);
+void wasm_rt_allocate_memory_shared(wasm_rt_shared_memory_t*, uint32_t initial_pages, uint32_t max_pages, bool is64, uint32_t page_size);
 uint32_t wasm_rt_grow_memory_shared(wasm_rt_shared_memory_t*, uint32_t pages);
 void wasm_rt_free_memory_shared(wasm_rt_shared_memory_t*);
 void wasm_rt_allocate_funcref_table(wasm_rt_table_t*, uint32_t elements, uint32_t max_elements);
@@ -381,10 +384,12 @@ with `WASM_RT_TRAP_HANDLER` defined to the name of a trap handler function. The
 handler function should be a function taking a `wasm_rt_trap_t` as a parameter
 and returning `void`. e.g. `-DWASM_RT_TRAP_HANDLER=my_trap_handler`
 
-`wasm_rt_allocate_memory` initializes a memory instance, and allocates at least
-enough space for the given number of initial pages. The memory must be cleared
-to zero. The `is64` parameter indicates if the memory is indexed with
-an i32 or i64 address.
+`wasm_rt_allocate_memory` initializes a memory instance, and allocates
+at least enough space for the given number of initial pages, each of
+size `page_size` (which must be `WASM_DEFAULT_PAGE_SIZE`, equal to 64
+KiB, unless using the custom-page-sizes feature). The memory must be
+cleared to zero. The `is64` parameter indicates if the memory is
+indexed with an i32 or i64 address.
 
 `wasm_rt_grow_memory` must grow the given memory instance by the given number of
 pages. If there isn't enough memory to do so, or the new page count would be
@@ -399,7 +404,7 @@ arguments and returning `void` . e.g.
 `wasm_rt_free_memory` frees the memory instance.
 
 `wasm_rt_allocate_memory_shared` initializes a memory instance that can be
-shared by different Wasm threads. It's operation is otherwise similar to
+shared by different Wasm threads. Its operation is otherwise similar to
 `wasm_rt_allocate_memory`.
 
 `wasm_rt_grow_memory_shared` must grow the given shared memory instance by the
@@ -658,8 +663,8 @@ int main(int argc, char** argv) {
 
   /* Create two `host` instances to store the memory and current string */
   w2c_host host_1, host_2;
-  wasm_rt_allocate_memory(&host_1.memory, 1, 1, false);
-  wasm_rt_allocate_memory(&host_2.memory, 1, 1, false);
+  wasm_rt_allocate_memory(&host_1.memory, 1, 1, false, WASM_DEFAULT_PAGE_SIZE);
+  wasm_rt_allocate_memory(&host_2.memory, 1, 1, false, WASM_DEFAULT_PAGE_SIZE);
 
   /* Construct the `rot13` module instances */
   w2c_rot13 rot13_1, rot13_2;
