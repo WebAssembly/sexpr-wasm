@@ -217,8 +217,12 @@ struct AST {
         return;
       }
       case ExprType::Br: {
-        InsertNode(NodeType::Expr, ExprType::Br, &e, 0).u.lt =
-            mc.GetLabel(cast<BrExpr>(&e)->var)->label_type;
+        LabelType lt = mc.GetLabel(cast<BrExpr>(&e)->var)->label_type;
+        if (lt == LabelType::Func) {
+          InsertNode(NodeType::Expr, ExprType::Return, &e, arity.nargs);
+          return;
+        }
+        InsertNode(NodeType::Expr, ExprType::Br, &e, 0).u.lt = lt;
         return;
       }
       case ExprType::BrIf: {
