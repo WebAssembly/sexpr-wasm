@@ -617,7 +617,7 @@ TokenType WastParser::Peek(size_t n) {
       }
       if ((options_->features.code_metadata_enabled() &&
            cur.text().find("metadata.code.") == 0) ||
-          cur.text() == "custom") {
+          cur.text() == "custom" || cur.text() == "name") {
         tokens_.push_back(cur);
         continue;
       }
@@ -772,6 +772,13 @@ Result WastParser::ErrorIfLpar(const std::vector<std::string>& expected,
 
 bool WastParser::ParseBindVarOpt(std::string* name) {
   WABT_TRACE(ParseBindVarOpt);
+  if (PeekIsAnnotation("name")) {
+    // Should be the @name
+    Consume();
+    CHECK_RESULT(ParseQuotedText(name));
+    EXPECT(Rpar);
+    return true;
+  }
   if (!PeekMatch(TokenType::Var)) {
     return false;
   }
@@ -1218,7 +1225,7 @@ Result WastParser::ParseModule(std::unique_ptr<Module>* out_module) {
       auto module_command = cast<ScriptModuleCommand>(std::move(command));
       *module = std::move(module_command->module);
     }
-  } else if (IsModuleField(PeekPair()) || PeekIsCustom()) {
+  } else if (IsModuleField(PeekPair()) || PeekIsAnnotation("custom")) {
     // Parse an inline module (i.e. one with no surrounding (module)).
     CHECK_RESULT(ParseModuleFieldList(module.get()));
   } else if (PeekMatch(TokenType::Eof)) {
@@ -1244,7 +1251,7 @@ Result WastParser::ParseScript(std::unique_ptr<Script>* out_script) {
   // Don't consume the Lpar yet, even though it is required. This way the
   // sub-parser functions (e.g. ParseFuncModuleField) can consume it and keep
   // the parsing structure more regular.
-  if (IsModuleField(PeekPair()) || PeekIsCustom()) {
+  if (IsModuleField(PeekPair()) || PeekIsAnnotation("custom")) {
     // Parse an inline module (i.e. one with no surrounding (module)).
     auto command = std::make_unique<ModuleCommand>();
     command->module.loc = GetLocation();
@@ -1317,17 +1324,17 @@ Result WastParser::ParseCustomSectionAnnotation(Module* module) {
   return Result::Ok;
 }
 
-bool WastParser::PeekIsCustom() {
+bool WastParser::PeekIsAnnotation(const char* name) {
   // If IsLparAnn succeeds, tokens_.front() must have text, as it is an LparAnn
   // token.
   return options_->features.annotations_enabled() && IsLparAnn(PeekPair()) &&
-         tokens_.front().text() == "custom";
+         tokens_.front().text() == name;
 }
 
 Result WastParser::ParseModuleFieldList(Module* module) {
   WABT_TRACE(ParseModuleFieldList);
-  while (IsModuleField(PeekPair()) || PeekIsCustom()) {
-    if (PeekIsCustom()) {
+  while (IsModuleField(PeekPair()) || PeekIsAnnotation("custom")) {
+    if (PeekIsAnnotation("custom")) {
       CHECK_RESULT(ParseCustomSectionAnnotation(module));
       continue;
     }
@@ -3732,7 +3739,7 @@ Result WastParser::ParseScriptModule(
       auto tsm = std::make_unique<TextScriptModule>();
       tsm->module.name = name;
       tsm->module.loc = loc;
-      if (IsModuleField(PeekPair()) || PeekIsCustom()) {
+      if (IsModuleField(PeekPair()) || PeekIsAnnotation("custom")) {
         CHECK_RESULT(ParseModuleFieldList(&tsm->module));
       } else if (!PeekMatch(TokenType::Rpar)) {
         ConsumeIfLpar();

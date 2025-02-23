@@ -1,0 +1,13 @@
+;;; TOOL: run-roundtrip
+;;; ARGS: --stdout --no-check --enable-annotations --debug-names
+(module
+  (type (;0;) (func (result i32)))
+  (func (@name "$hi hello hey") (type 0) (result i32)
+    i32.const 42))
+(;; STDOUT ;;;
+(module
+  (type (;0;) (func (result i32)))
+  (func (@name "$hi hello hey") (type 0) (result i32)
+    i32.const 42)
+  (@custom "name" "\01\0f\01\00\0chi hello hey\02\03\01\00\00"))
+;;; STDOUT ;;)
