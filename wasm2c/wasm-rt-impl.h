@@ -56,6 +56,26 @@ extern WASM_RT_THREAD_LOCAL uint32_t wasm_rt_saved_call_stack_depth;
  *   // Call the potentially-trapping function.
  *   my_wasm_func();
  * ```
+ *
+ * This macro depends on definitions from `wasm-rt-impl.h`, e.g.:
+ * ```
+ * ...
+ * #include "wasm-rt-exceptions.h"
+ * ...
+ * ```
+ * 
+ * In case the exception extension is not available one can use wasm_rt_try
+ * like in this example:
+ * 
+ * ```
+ * wasm_rt_trap_t code = wasm_rt_try(g_wasm_rt_jmp_buf);
+ * if (WASM_RT_TRAP_NONE == code) {
+ *  w2c_0x24empty(&my_module);
+ * }
+ * else {
+ *   printf("%s\n", wasm_rt_strerror(code));
+ * }
+ * ```
  */
 #define wasm_rt_impl_try()                                                    \
   (WASM_RT_SAVE_STACK_DEPTH(), wasm_rt_set_unwind_target(&g_wasm_rt_jmp_buf), \
