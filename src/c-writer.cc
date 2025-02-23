@@ -4267,6 +4267,8 @@ void CWriter::Write(const ExprList& exprs) {
       case ExprType::AtomicWait:
       case ExprType::AtomicNotify:
       case ExprType::CallRef:
+      case ExprType::OpCodeRaw:
+
         UNIMPLEMENTED("...");
         break;
     }

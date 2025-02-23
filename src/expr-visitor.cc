@@ -149,6 +149,21 @@ Result ExprVisitor::VisitExpr(Expr* root_expr) {
         }
         break;
       }
+      case State::OpcodeRaw: {
+        auto opcode_raw_expr = cast<OpcodeRawExpr>(expr);
+        // ERROR_UNLESS(opcode_raw_expr->is_extracted, "opcode_raw could not
+        // compile when in visiting")
+        if (opcode_raw_expr->is_extracted) {
+          auto& iter = expr_iter_stack_.back();
+          if (iter != opcode_raw_expr->extracted_exprs.end()) {
+            PushDefault(&*iter++);
+          } else {
+            PopExprlist();
+          }
+        }
+
+        break;
+      }
     }
   }
 
@@ -449,6 +464,17 @@ Result ExprVisitor::HandleDefaultState(Expr* expr) {
     case ExprType::Unreachable:
       CHECK_RESULT(delegate_->OnUnreachableExpr(cast<UnreachableExpr>(expr)));
       break;
+    case ExprType::OpCodeRaw: {
+      auto opcode_raw_expr = cast<OpcodeRawExpr>(expr);
+      CHECK_RESULT(delegate_->OnOpcodeRawExpr(opcode_raw_expr));
+
+      if (opcode_raw_expr->is_extracted) {
+        PushExprlist(State::OpcodeRaw, expr, opcode_raw_expr->extracted_exprs);
+      } else {
+        // just skip
+      }
+      break;
+    }
   }
 
   return Result::Ok;

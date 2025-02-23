@@ -272,6 +272,8 @@ ModuleContext::Arities ModuleContext::GetExprArity(const Expr& expr) const {
 
     case ExprType::SimdShuffleOp:
       return {2, 1};
+    case ExprType::OpCodeRaw:
+      return {0, cast<OpcodeRawExpr>(&expr)->func_sig->GetNumResults()};
   }
 
   WABT_UNREACHABLE;

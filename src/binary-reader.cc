@@ -72,6 +72,11 @@ namespace {
 
 class BinaryReader {
  public:
+  friend Result wabt::ExtractFunctionBody(const void* data,
+                                          size_t size,
+                                          Location& loc,
+                                          BinaryReaderDelegate* delegate,
+                                          const ReadBinaryOptions& options);
   struct ReadModuleOptions {
     bool stop_on_first_error;
   };
@@ -162,6 +167,7 @@ class BinaryReader {
   [[nodiscard]] Result ReadFunctionBody(Offset end_offset);
   // ReadInstructions reads until end_offset or the nesting depth reaches zero.
   [[nodiscard]] Result ReadInstructions(Offset end_offset, const char* context);
+  [[nodiscard]] Result ReadSkippedFunctionBody(Offset end_offset);
   [[nodiscard]] Result ReadNameSection(Offset section_size);
   [[nodiscard]] Result ReadRelocSection(Offset section_size);
   [[nodiscard]] Result ReadDylinkSection(Offset section_size);
@@ -1939,6 +1945,22 @@ Result BinaryReader::ReadInstructions(Offset end_offset, const char* context) {
   return Result::Error;
 }
 
+Result BinaryReader::ReadSkippedFunctionBody(Offset end_offset) {
+#ifdef WABT_KEEP_OPCODE_WHEN_SKIP_FUNC_BODY
+  std::vector<uint8_t> opcode_buffer(end_offset - state_.offset);
+  memcpy(opcode_buffer.data(), state_.data + state_.offset,
+         opcode_buffer.size());
+  CALLBACK(OnSkipFunctionBodyExpr, opcode_buffer);
+  state_.offset = end_offset;
+#else
+  // old version with OnEndExpr
+  state_.offset = end_offset;
+  CALLBACK0(OnEndExpr);
+#endif
+
+  return Result::Ok;
+}
+
 Result BinaryReader::ReadNameSection(Offset section_size) {
   CALLBACK(BeginNamesSection, section_size);
   Index i = 0;
@@ -2887,7 +2909,7 @@ Result BinaryReader::ReadCodeSection(Offset section_size) {
     CALLBACK(EndLocalDecls);
 
     if (options_.skip_function_bodies) {
-      state_.offset = end_offset;
+      CHECK_RESULT(ReadSkippedFunctionBody(end_offset));
     } else {
       CHECK_RESULT(ReadFunctionBody(end_offset));
     }
@@ -3140,6 +3162,18 @@ Result ReadBinary(const void* data,
   BinaryReader reader(data, size, delegate, options);
   return reader.ReadModule(
       BinaryReader::ReadModuleOptions{options.stop_on_first_error});
+}
+
+Result ExtractFunctionBody(const void* data,
+                           size_t size,
+                           Location& loc,
+                           BinaryReaderDelegate* delegate,
+                           const ReadBinaryOptions& options) {
+  BinaryReader reader(static_cast<const uint8_t*>(data) - loc.offset,
+                      size + loc.offset, delegate, options);
+  reader.state_.offset = loc.offset;
+  return reader.ReadInstructions(reader.state_.offset + size,
+                                 "extract function body");
 }
 
 }  // namespace wabt

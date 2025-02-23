@@ -429,7 +429,8 @@ enum class ExprType {
   Unreachable,
 
   First = AtomicLoad,
-  Last = Unreachable
+  Last = Unreachable,
+  OpCodeRaw = Last + 1,  // virtual type
 };
 
 const char* GetExprTypeName(ExprType type);
@@ -837,6 +838,22 @@ class AtomicFenceExpr : public ExprMixin<ExprType::AtomicFence> {
         consistency_model(consistency_model) {}
 
   uint32_t consistency_model;
+};
+
+class OpcodeRawExpr : public ExprMixin<ExprType::OpCodeRaw> {
+ public:
+  explicit OpcodeRawExpr(std::vector<uint8_t>&& in_opcode_buffer,
+                         FuncSignature& in_func_sig,
+                         const Location& loc = Location())
+      : ExprMixin<ExprType::OpCodeRaw>(loc),
+        opcode_buffer(std::move(in_opcode_buffer)),
+        is_extracted(false),
+        func_sig(&in_func_sig) {}
+
+  std::vector<uint8_t> opcode_buffer;
+  bool is_extracted;
+  ExprList extracted_exprs;
+  const FuncSignature* func_sig;
 };
 
 struct Tag {

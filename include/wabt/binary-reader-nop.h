@@ -259,6 +259,9 @@ class BinaryReaderNop : public BinaryReaderDelegate {
   Result OnDropExpr() override { return Result::Ok; }
   Result OnElseExpr() override { return Result::Ok; }
   Result OnEndExpr() override { return Result::Ok; }
+  Result OnSkipFunctionBodyExpr(std::vector<uint8_t>& opcode_buffer) override {
+    return Result::Ok;
+  }
   Result OnF32ConstExpr(uint32_t value_bits) override { return Result::Ok; }
   Result OnF64ConstExpr(uint64_t value_bits) override { return Result::Ok; }
   Result OnV128ConstExpr(v128 value_bits) override { return Result::Ok; }
