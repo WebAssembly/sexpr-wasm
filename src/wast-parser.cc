@@ -319,37 +319,51 @@ bool ResolveFuncTypeWithEmptySignature(const Module& module,
   return false;
 }
 
-void ResolveTypeName(
+Result ResolveTypeName(
     const Module& module,
     Type& type,
     Index index,
-    const std::unordered_map<uint32_t, std::string>& bindings) {
+    const std::unordered_map<uint32_t, std::string>& bindings,
+    Errors* errors) {
   if (type != Type::Reference || type.GetReferenceIndex() != kInvalidIndex) {
-    return;
+    return Result::Ok;
   }
 
   const auto name_iterator = bindings.find(index);
   assert(name_iterator != bindings.cend());
   const auto type_index = module.type_bindings.FindIndex(name_iterator->second);
-  assert(type_index != kInvalidIndex);
+
+  if (type_index == kInvalidIndex) {
+    const Location loc;
+    assert(errors != nullptr);
+
+    errors->emplace_back(
+        ErrorLevel::Error, loc,
+        StringPrintf("reference %s not found", name_iterator->second.data()));
+    return Result::Error;
+  }
+
   type = Type(Type::Reference, type_index);
+  return Result::Ok;
 }
 
-void ResolveTypeNames(const Module& module, FuncDeclaration* decl) {
+Result ResolveTypeNames(const Module& module, FuncDeclaration* decl, Errors* errors) {
   assert(decl);
   auto& signature = decl->sig;
+  Result result = Result::Ok;
 
   for (uint32_t param_index = 0; param_index < signature.GetNumParams();
        ++param_index) {
-    ResolveTypeName(module, signature.param_types[param_index], param_index,
-                    signature.param_type_names);
+    result |= ResolveTypeName(module, signature.param_types[param_index], param_index,
+                              signature.param_type_names, errors);
   }
 
   for (uint32_t result_index = 0; result_index < signature.GetNumResults();
        ++result_index) {
-    ResolveTypeName(module, signature.result_types[result_index], result_index,
-                    signature.result_type_names);
+    result |= ResolveTypeName(module, signature.result_types[result_index], result_index,
+                              signature.result_type_names, errors);
   }
+  return result;
 }
 
 void ResolveImplicitlyDefinedFunctionType(const Location& loc,
@@ -457,7 +471,7 @@ class ResolveFuncTypesExprVisitorDelegate : public ExprVisitor::DelegateNop {
       : module_(module), errors_(errors) {}
 
   void ResolveBlockDeclaration(const Location& loc, BlockDeclaration* decl) {
-    ResolveTypeNames(*module_, decl);
+    ResolveTypeNames(*module_, decl, nullptr);
     ResolveFuncTypeWithEmptySignature(*module_, decl);
     if (!IsInlinableFuncSignature(decl->sig)) {
       ResolveImplicitlyDefinedFunctionType(loc, module_, *decl);
@@ -536,7 +550,7 @@ Result ResolveFuncTypes(Module* module, Errors* errors) {
     bool has_func_type_and_empty_signature = false;
 
     if (decl) {
-      ResolveTypeNames(*module, decl);
+      result |= ResolveTypeNames(*module, decl, errors);
       has_func_type_and_empty_signature =
           ResolveFuncTypeWithEmptySignature(*module, decl);
       ResolveImplicitlyDefinedFunctionType(field.loc, module, *decl);
